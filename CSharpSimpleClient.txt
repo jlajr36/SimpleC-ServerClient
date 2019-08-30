@@ -1,0 +1,32 @@
+﻿using System;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Net.Sockets;
+
+namespace SimpleTCPclient
+{
+	class Program
+	{
+		public static void Main(string[] args)
+		{
+			try {
+				TcpClient tcpClnt = new TcpClient();
+				int port = 8000;
+				Console.WriteLine("Connecting....");
+				tcpClnt.Connect("127.0.0.1", port);
+				Console.WriteLine("Connected...");
+				ASCIIEncoding asen = new ASCIIEncoding();
+				byte[] buff = asen.GetBytes("Code3434");
+				Stream stream = tcpClnt.GetStream();
+				Console.WriteLine("Sending...");
+				stream.Write(buff,0,buff.Length);
+				tcpClnt.Close();
+			} catch (Exception ex) {
+				//pass
+			}
+			Console.Write("Press any key to continue . . . ");
+			Console.ReadKey(true);
+		}
+	}
+}

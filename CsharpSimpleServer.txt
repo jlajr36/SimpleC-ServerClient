@@ -1,0 +1,40 @@
+﻿using System;
+using System.Text;
+using System.Net;
+using System.Net.Sockets;
+
+namespace SimpleTCPserver
+{
+	class Program
+	{
+		public static void Main(string[] args)
+		{
+			try {
+				IPAddress ipAddr = IPAddress.Parse("127.0.0.1");
+				int port = 8000;
+				TcpListener listener = new TcpListener(ipAddr,port);
+				listener.Start();
+				Console.WriteLine("Server Running on Port: " + port.ToString());
+				Console.WriteLine("Waiting on connection...");
+				Socket socket = listener.AcceptSocket();
+				//When Accept Socket
+				Console.WriteLine("Connection accepted from: " + socket.RemoteEndPoint);
+				byte[] buff = new byte[1024];
+				int len = socket.Receive(buff);
+				Console.WriteLine("Received...");
+				for (int index = 0; index < len; index++) {
+					Console.Write(Convert.ToChar(buff[index]));
+				}
+				ASCIIEncoding asen = new ASCIIEncoding();
+				socket.Send(asen.GetBytes("Msg Received"));
+				socket.Close();
+				listener.Stop();
+			} catch (Exception) {
+				
+				throw;
+			}
+			Console.Write("Press any key to continue . . . ");
+			Console.ReadKey(true);
+		}
+	}
+}
