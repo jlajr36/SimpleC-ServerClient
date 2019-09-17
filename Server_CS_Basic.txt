@@ -1,0 +1,48 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Net;
+using System.Net.Sockets;
+
+namespace Server_CS_Basic
+{
+	class Program
+	{
+		//Server will listen on this port
+		const int portNo = 500;
+		
+		public static void Main(string[] args)
+		{
+			//Local Address only
+			IPAddress localAddr = IPAddress.Parse("127.0.0.1");
+			
+			//Start the TCP Listener for incomming connections
+			TcpListener tcpListener = new TcpListener(localAddr, portNo);
+			tcpListener.Start();
+			
+			//Accept incomming Client on port
+			Console.WriteLine("Waiting for client...");
+			TcpClient tcpClient = tcpListener.AcceptTcpClient();
+			
+			//Network Stream for send and receive data
+			NetworkStream netStream = tcpClient.GetStream();
+			
+			//Data buffer of incomming data
+			byte[] dataBuff = new byte[tcpClient.ReceiveBufferSize];
+			
+			//Blocking call to read incomming data
+			int offset = 0;
+			int numByteRead = netStream.Read(dataBuff, 
+			                                 offset, 
+			                                 System.Convert.ToInt32(tcpClient.ReceiveBufferSize));
+			//Display incomming data
+			int index = 0;
+			Console.WriteLine("Received: " 
+			                  + Encoding.ASCII.GetString(dataBuff,index,numByteRead));
+			
+			//Wait for key press to see results
+			Console.Write("Press any key to continue . . . ");
+			Console.ReadKey(true);
+		}
+	}
+}

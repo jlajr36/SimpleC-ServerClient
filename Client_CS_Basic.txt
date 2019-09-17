@@ -1,0 +1,37 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Net.Sockets;
+
+namespace Client_CS_Basic
+{
+	class Program
+	{
+		//Server connection port
+		const int portNo = 500;
+		
+		//Server IP Address
+		const string Addr = "127.0.0.1";
+		
+		public static void Main(string[] args)
+		{
+			//Connect Client
+			TcpClient tcpClient = new TcpClient();
+			tcpClient.Connect(Addr,portNo);
+			
+			//Network Stream to send data to server
+			NetworkStream netStream = tcpClient.GetStream();
+			string strToSent = "Hello from the client";
+			byte[] data = Encoding.ASCII.GetBytes(strToSent);
+			
+			//Send the data, One way comm with Server
+			int offset = 0;
+			netStream.Write(data, offset, data.Length);
+			Console.WriteLine("Data Sent");
+			
+			//Wait for key press to see results
+			Console.Write("Press any key to continue . . . ");
+			Console.ReadKey(true);
+		}
+	}
+}
