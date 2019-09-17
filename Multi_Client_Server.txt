@@ -1,0 +1,110 @@
+﻿using System;
+using System.Collections;
+using System.Text;
+using System.Net;
+using System.Net.Sockets;
+
+namespace Multi_Client_Server
+{
+	class Program
+	{
+		//Server will listen on this port
+		const int portNo = 500;
+		
+		public static void Main(string[] args)
+		{
+			//Local Address only
+			IPAddress localAddr = IPAddress.Parse("127.0.0.1");
+			
+			//Start the TCP Listener for incomming connections
+			TcpListener tcpListener = new TcpListener(localAddr, portNo);
+			tcpListener.Start();
+			
+			//Loop forever
+			while (true) {
+				//Accept incomming Client on port
+				Console.WriteLine("Waiting for client...");
+				ChatClient user = new ChatClient(tcpListener.AcceptTcpClient());
+			}
+		}
+	}
+	
+	class ChatClient
+	{
+		//Contains list of all clients
+		public static Hashtable AllClients = new Hashtable();
+		
+		//Client Information
+		private TcpClient _client;
+		private string _clientIP;
+		private string _clientNick;
+		
+		//data send recieve buffer
+		private byte[] data;
+		
+		//Is the a nick name
+		private bool ReceiveNick = true;
+		
+		public ChatClient(TcpClient client) {
+			_client = client;
+			
+			//Get Client IP
+			_clientIP = client.Client.RemoteEndPoint.ToString();
+			
+			//Add client to hash table
+			AllClients.Add(_clientIP, this);
+			
+			//start reading client data thread
+			data = new byte[_client.ReceiveBufferSize];
+			int offset = 0;
+			client.GetStream().BeginRead(data, 
+			                             offset, 
+			                             System.Convert.ToInt32(_client.ReceiveBufferSize),
+			                             ReceiveMessage,null);
+		}
+		
+		public void ReceiveMessage(IAsyncResult ar) {
+			//read from client
+			int bytesRead;
+			try {
+				lock(_client.GetStream()) {
+					bytesRead = _client.GetStream().EndRead(ar);
+				}
+				
+				//client disconnected
+				
+				//continue reading from Client
+				
+			} catch (Exception ex) {
+				//When client Disconnects
+				AllClients.Remove(_clientIP);
+				Broadcast(_clientNick + " has left the chat.");
+			}
+		}
+		
+		public void SendMessage(string message) {
+			try {
+				//send text
+				NetworkStream netStream;
+				lock(_client.GetStream()) {
+					netStream = _client.GetStream();
+				}
+				byte[] bytesToSend = Encoding.ASCII.GetBytes(message);
+				int offset = 0;
+				netStream.Write(bytesToSend,offset,bytesToSend.Length);
+				netStream.Flush();
+			} catch (Exception ex) {
+				Console.WriteLine(ex.ToString());
+			}
+		}
+		
+		public void Broadcast(string message) {
+			//log to Console
+			Console.WriteLine(message);
+			foreach (DictionaryEntry client in AllClients) {
+				//To all Users
+				((ChatClient)(client.Value)).SendMessage(message + Environment.NewLine);
+			}
+		}
+	}
+}
